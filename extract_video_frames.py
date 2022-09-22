@@ -10,7 +10,7 @@ def extract_video_frames (video_path, frame_path):
     return
 
 def list_video_dir (data_dir):
-    data_dir = os.path.join(BASE_DIR, data_dir)
+    data_dir = os.path.abspath(os.path.join(BASE_DIR, data_dir))
     if (not os.path.exists(data_dir)):
         print("Video director {} not found!".format(data_dir))
     return os.listdir(data_dir)
