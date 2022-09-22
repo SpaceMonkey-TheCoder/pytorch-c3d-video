@@ -36,7 +36,7 @@ def get_sport_clip(clip_name, verbose=False):
         a pytorch batch (n, ch, fr, h, w).
     """
     print(clip_name)
-    clip = sorted(glob(abspath(join(clip_name, '\*.jpg'))))
+    clip = sorted(glob(abspath(join(clip_name, '/*.jpg'))))
     print(len(clip))
     clip = np.array([resize(io.imread(frame), output_shape=(112, 200), preserve_range=True) for frame in clip])
     clip = clip[:, :, 44:44+112, :]  # crop centrally
