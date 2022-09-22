@@ -15,6 +15,7 @@ from C3D_model import C3D
 
 import math
 import extract_video_frames
+import os
 
 
 def get_sport_clip(clip_name, verbose=False):
@@ -34,8 +35,9 @@ def get_sport_clip(clip_name, verbose=False):
     Tensor
         a pytorch batch (n, ch, fr, h, w).
     """
-
-    clip = sorted(glob(join('data', clip_name, '*.jpg')))
+    print(clip_name)
+    clip = sorted(glob(join(clip_name, '\*.jpg')))
+    print(len(clip))
     clip = np.array([resize(io.imread(frame), output_shape=(112, 200), preserve_range=True) for frame in clip])
     clip = clip[:, :, 44:44+112, :]  # crop centrally
 
@@ -76,6 +78,7 @@ def read_labels_from_file(filepath):
     with open(filepath, 'r', encoding='utf8') as f:
         labels = [line.strip() for line in f.readlines()]
     return labels
+
 activation = {'fc6': []}
 def get_activation (layer_name):
     def hook (model, input, output):
@@ -90,7 +93,7 @@ def main():
     frame_dir = []
     video_lst = extract_video_frames.list_video_dir('./videos')
     for v in video_lst:
-        cur_dir = './data/'+v.replace(' ', '_')
+        cur_dir = os.path.abspath(os.path.join(os.curdir, './data/') +v.replace(' ', '_'))
         frame_dir.append(cur_dir)
         extract_video_frames.make_frame_dir(cur_dir)
 
@@ -100,13 +103,13 @@ def main():
     for i in range(len(video_lst)):
         print("Loading data from {} . . .".format(frame_dir[i]))
         # load a clip to be predicted
-        clip_lst = get_sport_clip(frame_dir[i].split('/')[-1])
+        clip_lst = get_sport_clip(frame_dir[i])
         print('Data loaded!')
         with torch.no_grad():
             # get network pretrained model
             net = C3D()
             print('Loading weights . . .')
-            net.load_state_dict(torch.load('c3d.pickle'))
+            net.load_state_dict(torch.load(os.path.abspath(os.path.join(os.curdir, 'c3d.pickle'))))
             print('Weights loaded!')
             net.fc6.register_forward_hook(get_activation('fc6'))
             print('Adding hook . . .')
@@ -125,7 +128,7 @@ def main():
                 k +=1
 
             print(len(activation['fc6']))
-            np.save('./extracted_features/' + video_lst[i].split('.')[0] + '.npy', np.array(activation['fc6'], dtype=object), allow_pickle=True)
+            np.save(os.path.abspath(os.path.join(os.curdir , './extracted_features/' + video_lst[i].split('.')[0] + '.npy')), np.array(activation['fc6'], dtype=object), allow_pickle=True)
 
 
 # entry point
